@@ -2,16 +2,14 @@
 
 set -eu
 
-DATA_DIR="${MTPROXY_DATA_DIR:-/data}"
-PROXY_SECRET_FILE="${MTPROXY_PROXY_SECRET_FILE:-${DATA_DIR}/proxy-secret}"
-PROXY_CONFIG_FILE="${MTPROXY_PROXY_CONFIG_FILE:-${DATA_DIR}/proxy-multi.conf}"
-CLIENT_SECRET_FILE="${MTPROXY_CLIENT_SECRET_FILE:-${DATA_DIR}/client-secret}"
+DATA_DIR="/data"
+PROXY_SECRET_FILE="${DATA_DIR}/proxy-secret"
+PROXY_CONFIG_FILE="${DATA_DIR}/proxy-multi.conf"
+CLIENT_SECRET_FILE="${DATA_DIR}/client-secret"
 SECRET_VALUE="${SECRET:-}"
-CLIENT_SECRET="${MTPROXY_CLIENT_SECRET:-}"
 PUBLIC_HOST="${MTPROXY_PUBLIC_HOST:-}"
 PUBLIC_PORT="${MTPROXY_PORT:-443}"
 STATS_PORT="${MTPROXY_STATS_PORT:-8888}"
-RUN_USER="${MTPROXY_USER:-nobody}"
 WORKERS="${MTPROXY_WORKERS:-1}"
 TAG="${MTPROXY_TAG:-}"
 REFRESH_INTERVAL="${MTPROXY_REFRESH_INTERVAL:-86400}"
@@ -32,14 +30,12 @@ refresh_runtime_files() {
     download_file "https://core.telegram.org/getProxyConfig" "${PROXY_CONFIG_FILE}"
 }
 
-if [ -n "${CLIENT_SECRET}" ]; then
-    printf '%s' "${CLIENT_SECRET}" > "${CLIENT_SECRET_FILE}"
-elif [ ! -s "${CLIENT_SECRET_FILE}" ]; then
+if [ ! -s "${CLIENT_SECRET_FILE}" ]; then
     openssl rand -hex 16 > "${CLIENT_SECRET_FILE}"
 fi
 
 if [ -z "${SECRET_VALUE}" ]; then
-    SECRET_VALUE="${CLIENT_SECRET:-$(tr -d '\r\n' < "${CLIENT_SECRET_FILE}")}"
+    SECRET_VALUE="$(tr -d '\r\n' < "${CLIENT_SECRET_FILE}")"
 fi
 
 SECRET_VALUE="$(printf '%s' "${SECRET_VALUE}" | tr -d '\r\n' | sed 's/[[:space:]]//g')"
@@ -64,7 +60,7 @@ SECRETS="$*"
 start_proxy() {
     set -- \
         /usr/local/bin/mtproto-proxy \
-        -u "${RUN_USER}" \
+        -u nobody \
         -p "${STATS_PORT}" \
         -H "${PUBLIC_PORT}" \
         --aes-pwd "${PROXY_SECRET_FILE}" "${PROXY_CONFIG_FILE}" \
@@ -79,11 +75,6 @@ start_proxy() {
 
     if [ -n "${TAG}" ]; then
         set -- "$@" -P "${TAG}"
-    fi
-
-    if [ -n "${MTPROXY_EXTRA_ARGS:-}" ]; then
-        # shellcheck disable=SC2086
-        set -- "$@" ${MTPROXY_EXTRA_ARGS}
     fi
 
     "$@" &

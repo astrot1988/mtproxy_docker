@@ -1,0 +1,23 @@
+services:
+  mtproxy:
+    image: ghcr.io/astrot1988/mtproxy_docker:latest
+    build:
+      context: .
+    container_name: mtproxy
+    restart: unless-stopped
+    ports:
+      - "443:443"
+      - "127.0.0.1:8888:8888"
+    environment:
+      MTPROXY_PUBLIC_HOST: ${MTPROXY_PUBLIC_HOST:?set MTPROXY_PUBLIC_HOST}
+      MTPROXY_PORT: ${MTPROXY_PORT:-443}
+      MTPROXY_STATS_PORT: ${MTPROXY_STATS_PORT:-8888}
+      SECRET: ${SECRET:-}
+      MTPROXY_TAG: ${MTPROXY_TAG:-}
+      MTPROXY_WORKERS: ${MTPROXY_WORKERS:-1}
+      MTPROXY_REFRESH_INTERVAL: ${MTPROXY_REFRESH_INTERVAL:-86400}
+    volumes:
+      - mtproxy-data:/data
+
+volumes:
+  mtproxy-data:
