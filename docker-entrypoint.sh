@@ -6,6 +6,7 @@ DATA_DIR="${MTPROXY_DATA_DIR:-/data}"
 PROXY_SECRET_FILE="${MTPROXY_PROXY_SECRET_FILE:-${DATA_DIR}/proxy-secret}"
 PROXY_CONFIG_FILE="${MTPROXY_PROXY_CONFIG_FILE:-${DATA_DIR}/proxy-multi.conf}"
 CLIENT_SECRET_FILE="${MTPROXY_CLIENT_SECRET_FILE:-${DATA_DIR}/client-secret}"
+SECRET_VALUE="${SECRET:-}"
 CLIENT_SECRET="${MTPROXY_CLIENT_SECRET:-}"
 PUBLIC_HOST="${MTPROXY_PUBLIC_HOST:-}"
 PUBLIC_PORT="${MTPROXY_PORT:-443}"
@@ -37,12 +38,28 @@ elif [ ! -s "${CLIENT_SECRET_FILE}" ]; then
     openssl rand -hex 16 > "${CLIENT_SECRET_FILE}"
 fi
 
-CLIENT_SECRET="$(tr -d '\r\n' < "${CLIENT_SECRET_FILE}")"
+if [ -z "${SECRET_VALUE}" ]; then
+    SECRET_VALUE="${CLIENT_SECRET:-$(tr -d '\r\n' < "${CLIENT_SECRET_FILE}")}"
+fi
 
-if [ -z "${CLIENT_SECRET}" ]; then
-    echo "Client secret is empty" >&2
+SECRET_VALUE="$(printf '%s' "${SECRET_VALUE}" | tr -d '\r\n' | sed 's/[[:space:]]//g')"
+
+if [ -z "${SECRET_VALUE}" ]; then
+    echo "Secret list is empty" >&2
     exit 1
 fi
+
+OLD_IFS="${IFS}"
+IFS=','
+set -- ${SECRET_VALUE}
+IFS="${OLD_IFS}"
+
+if [ "$#" -eq 0 ]; then
+    echo "Secret list is empty" >&2
+    exit 1
+fi
+
+SECRETS="$*"
 
 start_proxy() {
     set -- \
@@ -50,9 +67,15 @@ start_proxy() {
         -u "${RUN_USER}" \
         -p "${STATS_PORT}" \
         -H "${PUBLIC_PORT}" \
-        -S "${CLIENT_SECRET}" \
         --aes-pwd "${PROXY_SECRET_FILE}" "${PROXY_CONFIG_FILE}" \
         -M "${WORKERS}"
+
+    OLD_IFS="${IFS}"
+    IFS=' '
+    for secret in ${SECRETS}; do
+        set -- "$@" -S "${secret}"
+    done
+    IFS="${OLD_IFS}"
 
     if [ -n "${TAG}" ]; then
         set -- "$@" -P "${TAG}"
@@ -81,13 +104,21 @@ terminate() {
 
 trap terminate INT TERM
 
-echo "MTProxy client secret: ${CLIENT_SECRET}"
-echo "MTProxy client secret with padding: dd${CLIENT_SECRET}"
+secret_index=1
+OLD_IFS="${IFS}"
+IFS=' '
+for secret in ${SECRETS}; do
+    echo "MTProxy client secret ${secret_index}: ${secret}"
+    echo "MTProxy client secret ${secret_index} with padding: dd${secret}"
 
-if [ -n "${PUBLIC_HOST}" ]; then
-    echo "Telegram link: tg://proxy?server=${PUBLIC_HOST}&port=${PUBLIC_PORT}&secret=${CLIENT_SECRET}"
-    echo "Telegram padded link: tg://proxy?server=${PUBLIC_HOST}&port=${PUBLIC_PORT}&secret=dd${CLIENT_SECRET}"
-fi
+    if [ -n "${PUBLIC_HOST}" ]; then
+        echo "Telegram link ${secret_index}: tg://proxy?server=${PUBLIC_HOST}&port=${PUBLIC_PORT}&secret=${secret}"
+        echo "Telegram padded link ${secret_index}: tg://proxy?server=${PUBLIC_HOST}&port=${PUBLIC_PORT}&secret=dd${secret}"
+    fi
+
+    secret_index=$((secret_index + 1))
+done
+IFS="${OLD_IFS}"
 
 while :; do
     refresh_runtime_files
