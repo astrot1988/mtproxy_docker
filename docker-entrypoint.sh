@@ -13,6 +13,7 @@ STATS_PORT="${MTPROXY_STATS_PORT:-8888}"
 WORKERS="${MTPROXY_WORKERS:-1}"
 TAG="${MTPROXY_TAG:-}"
 REFRESH_INTERVAL="${MTPROXY_REFRESH_INTERVAL:-86400}"
+MAX_SPECIAL_CONNECTIONS="60000"
 
 mkdir -p "${DATA_DIR}"
 
@@ -28,6 +29,30 @@ download_file() {
 refresh_runtime_files() {
     download_file "https://core.telegram.org/getProxySecret" "${PROXY_SECRET_FILE}"
     download_file "https://core.telegram.org/getProxyConfig" "${PROXY_CONFIG_FILE}"
+}
+
+resolve_public_ip() {
+    if [ -z "${PUBLIC_HOST}" ]; then
+        return 1
+    fi
+
+    resolved_ip="$(getent ahostsv4 "${PUBLIC_HOST}" 2>/dev/null | awk 'NR==1 {print $1}')"
+    if [ -n "${resolved_ip:-}" ]; then
+        printf '%s\n' "${resolved_ip}"
+        return 0
+    fi
+
+    return 1
+}
+
+resolve_local_ip() {
+    local_ip="$(ip -4 route get 1.1.1.1 2>/dev/null | awk '/src/ {for (i = 1; i <= NF; i++) if ($i == "src") {print $(i + 1); exit}}')"
+    if [ -n "${local_ip:-}" ]; then
+        printf '%s\n' "${local_ip}"
+        return 0
+    fi
+
+    return 1
 }
 
 if [ ! -s "${CLIENT_SECRET_FILE}" ]; then
@@ -63,8 +88,16 @@ start_proxy() {
         -u nobody \
         -p "${STATS_PORT}" \
         -H "${PUBLIC_PORT}" \
+        -C "${MAX_SPECIAL_CONNECTIONS}" \
         --aes-pwd "${PROXY_SECRET_FILE}" "${PROXY_CONFIG_FILE}" \
+        --allow-skip-dh \
         -M "${WORKERS}"
+
+    local_ip=""
+    public_ip=""
+    if local_ip="$(resolve_local_ip)" && public_ip="$(resolve_public_ip)"; then
+        set -- "$@" --nat-info "${local_ip}:${public_ip}"
+    fi
 
     OLD_IFS="${IFS}"
     IFS=' '

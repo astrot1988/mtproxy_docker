@@ -15,6 +15,13 @@ At container start it will:
 - start `mtproto-proxy` with the required arguments
 - refresh `proxy-multi.conf` every 24 hours and restart `mtproto-proxy`
 
+When `MTPROXY_PUBLIC_HOST` is set, the entrypoint also resolves:
+
+- the container's local IPv4 address
+- the public IPv4 address behind `MTPROXY_PUBLIC_HOST`
+
+and passes them to MTProxy as `--nat-info <local-ip>:<public-ip>`.
+
 ## Build
 
 ```bash
@@ -77,6 +84,7 @@ The repository includes [docker-compose.yml](/Users/aleksejlutovinov/Projects/qu
 - Upstream recommends refreshing `proxy-multi.conf` regularly. This image refreshes it on startup and then every 24 hours by default, restarting `mtproto-proxy` after the refresh.
 - If `SECRET` is not set, the container generates one secret and persists it in `/data/client-secret`.
 - If `SECRET` contains multiple comma-separated values, the container passes each of them as a separate `-S` argument to `mtproto-proxy`.
+- The runtime enables `--allow-skip-dh` and sets `-C 60000` to better match the behavior of the official MTProxy container image.
 - To enable random padding in clients, use the logged `dd...` variant of the secret or link.
 
 ## CI/CD
