@@ -16,10 +16,9 @@ const statusMeta = document.getElementById("status-meta");
 const summaryCards = document.getElementById("summary-cards");
 const metricsBody = document.getElementById("metrics-body");
 const metricCount = document.getElementById("metric-count");
-const rawOutput = document.getElementById("raw-output");
 
 function formatKey(key) {
-  return key.replace(/_/g, " ");
+  return key.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function formatValue(value) {
@@ -59,7 +58,8 @@ function renderSummary(summary) {
 
 function renderMetrics(metrics) {
   metricsBody.innerHTML = "";
-  for (const metric of metrics) {
+  const filtered = metrics.filter((metric) => metric.name && String(metric.name).trim().length > 0);
+  for (const metric of filtered) {
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${metric.name}</td>
@@ -67,7 +67,7 @@ function renderMetrics(metrics) {
     `;
     metricsBody.appendChild(row);
   }
-  metricCount.textContent = `${metrics.length} rows`;
+  metricCount.textContent = `${filtered.length} rows`;
 }
 
 async function refresh() {
@@ -80,7 +80,6 @@ async function refresh() {
 
     renderSummary(data.summary || {});
     renderMetrics(data.metrics || []);
-    rawOutput.textContent = data.raw || "";
 
     const fetchedAt = new Date((data.fetched_at || 0) * 1000);
     updateStatus(
@@ -90,7 +89,6 @@ async function refresh() {
     );
   } catch (error) {
     updateStatus(false, "Unavailable", String(error));
-    rawOutput.textContent = "";
     summaryCards.innerHTML = "";
     metricsBody.innerHTML = "";
     metricCount.textContent = "0 rows";

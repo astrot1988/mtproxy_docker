@@ -9,10 +9,10 @@
   <body>
     <main class="shell">
       <header class="hero">
-        <div>
+        <div class="hero-copy">
           <p class="eyebrow">MTProxy Telemetry</p>
           <h1>Runtime Stats Console</h1>
-          <p class="lede">Live metrics from the local MTProxy `http-stats` endpoint with a compact technical dashboard.</p>
+          <p class="lede">Structured live metrics from the local MTProxy `http-stats` endpoint with a strict operator-focused layout.</p>
         </div>
         <div class="status-panel">
           <div class="status-line">
@@ -25,33 +25,26 @@
 
       <section class="cards" id="summary-cards"></section>
 
-      <section class="grid">
-        <article class="panel">
-          <div class="panel-head">
+      <article class="panel metrics-panel">
+        <div class="panel-head">
+          <div>
             <h2>Metrics</h2>
-            <span class="caption" id="metric-count">0 rows</span>
+            <p class="panel-copy">Normalized counters and values exposed by the local MTProxy stats endpoint.</p>
           </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Value</th>
-                </tr>
-              </thead>
-              <tbody id="metrics-body"></tbody>
-            </table>
-          </div>
-        </article>
-
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Raw Feed</h2>
-            <span class="caption">Upstream text payload</span>
-          </div>
-          <pre id="raw-output" class="raw-output"></pre>
-        </article>
-      </section>
+          <span class="caption" id="metric-count">0 rows</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody id="metrics-body"></tbody>
+          </table>
+        </div>
+      </article>
     </main>
     <script src="/app.js"></script>
   </body>
