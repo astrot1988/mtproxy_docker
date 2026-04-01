@@ -15,6 +15,7 @@ services:
       SECRET: ${SECRET:-}
       MTPROXY_TAG: ${MTPROXY_TAG:-}
       MTPROXY_WORKERS: ${MTPROXY_WORKERS:-1}
+      MTPROXY_HTTP_STATS: ${MTPROXY_HTTP_STATS:-true}
       MTPROXY_REFRESH_INTERVAL: ${MTPROXY_REFRESH_INTERVAL:-86400}
     volumes:
       - mtproxy-data:/data

@@ -77,6 +77,7 @@ The repository includes [docker-compose.yml](/Users/aleksejlutovinov/Projects/qu
 - `SECRET`: one or more comma-separated 32-character hex secrets; this is the preferred setting
 - `MTPROXY_TAG`: proxy tag from `@MTProxybot`
 - `MTPROXY_WORKERS`: number of worker processes, default `1`
+- `MTPROXY_HTTP_STATS`: enable `--http-stats`, default `true`
 - `MTPROXY_REFRESH_INTERVAL`: refresh interval in seconds, default `86400`
 
 ## Notes
@@ -85,6 +86,7 @@ The repository includes [docker-compose.yml](/Users/aleksejlutovinov/Projects/qu
 - If `SECRET` is not set, the container generates one secret and persists it in `/data/client-secret`.
 - If `SECRET` contains multiple comma-separated values, the container passes each of them as a separate `-S` argument to `mtproto-proxy`.
 - The runtime enables `--allow-skip-dh` and sets `-C 60000` to better match the behavior of the official MTProxy container image.
+- The runtime enables `--http-stats` by default; set `MTPROXY_HTTP_STATS=false` to disable it.
 - To enable random padding in clients, use the logged `dd...` variant of the secret or link.
 
 ## CI/CD

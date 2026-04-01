@@ -13,6 +13,7 @@ STATS_PORT="${MTPROXY_STATS_PORT:-8888}"
 WORKERS="${MTPROXY_WORKERS:-1}"
 TAG="${MTPROXY_TAG:-}"
 REFRESH_INTERVAL="${MTPROXY_REFRESH_INTERVAL:-86400}"
+HTTP_STATS="${MTPROXY_HTTP_STATS:-true}"
 MAX_SPECIAL_CONNECTIONS="60000"
 
 mkdir -p "${DATA_DIR}"
@@ -92,6 +93,12 @@ start_proxy() {
         --aes-pwd "${PROXY_SECRET_FILE}" "${PROXY_CONFIG_FILE}" \
         --allow-skip-dh \
         -M "${WORKERS}"
+
+    case "${HTTP_STATS}" in
+        1|true|TRUE|yes|YES|on|ON)
+            set -- "$@" --http-stats
+            ;;
+    esac
 
     local_ip=""
     public_ip=""
