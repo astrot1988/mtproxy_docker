@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MTProxy Stats</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">MTProxy Telemetry</p>
+          <h1>Runtime Stats Console</h1>
+          <p class="lede">Live metrics from the local MTProxy `http-stats` endpoint with a compact technical dashboard.</p>
+        </div>
+        <div class="status-panel">
+          <div class="status-line">
+            <span class="dot" id="status-dot"></span>
+            <span id="status-text">Connecting</span>
+          </div>
+          <p id="status-meta">Waiting for first sample</p>
+        </div>
+      </header>
+
+      <section class="cards" id="summary-cards"></section>
+
+      <section class="grid">
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Metrics</h2>
+            <span class="caption" id="metric-count">0 rows</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody id="metrics-body"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Raw Feed</h2>
+            <span class="caption">Upstream text payload</span>
+          </div>
+          <pre id="raw-output" class="raw-output"></pre>
+        </article>
+      </section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+  </html>

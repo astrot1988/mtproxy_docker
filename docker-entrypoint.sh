@@ -14,6 +14,7 @@ WORKERS="${MTPROXY_WORKERS:-1}"
 TAG="${MTPROXY_TAG:-}"
 REFRESH_INTERVAL="${MTPROXY_REFRESH_INTERVAL:-86400}"
 HTTP_STATS="${MTPROXY_HTTP_STATS:-true}"
+UI_PORT="${MTPROXY_UI_PORT:-8080}"
 MAX_SPECIAL_CONNECTIONS="60000"
 
 mkdir -p "${DATA_DIR}"
@@ -83,6 +84,12 @@ fi
 
 SECRETS="$*"
 
+start_ui() {
+    MTPROXY_STATS_PORT="${STATS_PORT}" MTPROXY_UI_PORT="${UI_PORT}" \
+        /usr/local/bin/stats-ui-server.py &
+    UI_PID=$!
+}
+
 start_proxy() {
     set -- \
         /usr/local/bin/mtproto-proxy \
@@ -128,8 +135,16 @@ stop_proxy() {
     fi
 }
 
+stop_ui() {
+    if [ "${UI_PID:-}" ] && kill -0 "${UI_PID}" 2>/dev/null; then
+        kill -TERM "${UI_PID}" 2>/dev/null || true
+        wait "${UI_PID}" || true
+    fi
+}
+
 terminate() {
     stop_proxy
+    stop_ui
     exit 0
 }
 
@@ -150,6 +165,9 @@ for secret in ${SECRETS}; do
     secret_index=$((secret_index + 1))
 done
 IFS="${OLD_IFS}"
+
+echo "Stats UI: http://0.0.0.0:${UI_PORT}/"
+start_ui
 
 while :; do
     refresh_runtime_files

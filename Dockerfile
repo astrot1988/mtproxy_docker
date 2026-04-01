@@ -31,6 +31,7 @@ RUN apt-get update \
         iproute2 \
         libssl3 \
         openssl \
+        python3 \
         zlib1g \
     && rm -rf /var/lib/apt/lists/*
 
@@ -38,11 +39,13 @@ WORKDIR /opt/mtproxy
 
 COPY --from=builder /src/mtproxy/objs/bin/mtproto-proxy /usr/local/bin/mtproto-proxy
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY stats-ui-server.py /usr/local/bin/stats-ui-server.py
+COPY stats-ui /opt/mtproxy/stats-ui
 
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/stats-ui-server.py
 
 VOLUME ["/data"]
 
-EXPOSE 443 8888
+EXPOSE 443 8888 8080
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
