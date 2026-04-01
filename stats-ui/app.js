@@ -14,7 +14,7 @@ const statusDot = document.getElementById("status-dot");
 const statusText = document.getElementById("status-text");
 const statusMeta = document.getElementById("status-meta");
 const summaryCards = document.getElementById("summary-cards");
-const metricsBody = document.getElementById("metrics-body");
+const sectionsRoot = document.getElementById("sections-root");
 const metricCount = document.getElementById("metric-count");
 
 function formatKey(key) {
@@ -29,7 +29,8 @@ function formatValue(value) {
 }
 
 function updateStatus(ok, message, meta) {
-  statusDot.className = `dot ${ok ? "ok" : "error"}`;
+  const statusLine = document.getElementById("status-line");
+  statusLine.className = `status-line ${ok ? "status-ok" : "status-error"}`;
   statusText.textContent = message;
   statusMeta.textContent = meta;
 }
@@ -56,18 +57,51 @@ function renderSummary(summary) {
   }
 }
 
-function renderMetrics(metrics) {
-  metricsBody.innerHTML = "";
-  const filtered = metrics.filter((metric) => metric.name && String(metric.name).trim().length > 0);
-  for (const metric of filtered) {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${metric.name}</td>
-      <td>${formatValue(metric.value ?? metric.display ?? "")}</td>
+function renderSections(sections) {
+  sectionsRoot.innerHTML = "";
+  let totalMetrics = 0;
+  for (const section of sections) {
+    const metrics = (section.metrics || []).filter(
+      (metric) => metric.name && String(metric.name).trim().length > 0,
+    );
+    if (metrics.length === 0) {
+      continue;
+    }
+    totalMetrics += metrics.length;
+
+    const block = document.createElement("section");
+    block.className = "section-block";
+    const rows = metrics
+      .map(
+        (metric) => `
+          <tr>
+            <td>${formatKey(metric.name)}</td>
+            <td>${formatValue(metric.value ?? metric.display ?? "")}</td>
+          </tr>
+        `,
+      )
+      .join("");
+
+    block.innerHTML = `
+      <div class="section-head">
+        <h3 class="section-title">${section.title || formatKey(section.name || "Section")}</h3>
+        <span class="section-count">${metrics.length} metrics</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
     `;
-    metricsBody.appendChild(row);
+    sectionsRoot.appendChild(block);
   }
-  metricCount.textContent = `${filtered.length} rows`;
+  metricCount.textContent = `${totalMetrics} rows`;
 }
 
 async function refresh() {
@@ -79,7 +113,7 @@ async function refresh() {
     }
 
     renderSummary(data.summary || {});
-    renderMetrics(data.metrics || []);
+    renderSections(data.sections || []);
 
     const fetchedAt = new Date((data.fetched_at || 0) * 1000);
     updateStatus(
@@ -90,7 +124,7 @@ async function refresh() {
   } catch (error) {
     updateStatus(false, "Unavailable", String(error));
     summaryCards.innerHTML = "";
-    metricsBody.innerHTML = "";
+    sectionsRoot.innerHTML = "";
     metricCount.textContent = "0 rows";
   }
 }

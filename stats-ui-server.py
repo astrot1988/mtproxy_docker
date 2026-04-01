@@ -19,17 +19,27 @@ STATS_PATH = os.environ.get("MTPROXY_STATS_PATH", "/stats")
 UI_ROOT = Path("/opt/mtproxy/stats-ui")
 STATS_URL = f"http://127.0.0.1:{STATS_PORT}{STATS_PATH}"
 COMMON_KEYS = [
+    "version",
     "uptime",
+    "workers",
     "total_connections",
     "active_connections",
-    "curr_connections",
-    "accepted_connections",
+    "inbound_connections",
+    "outbound_connections",
+    "total_encrypted_connections",
     "total_special_connections",
     "max_special_connections",
-    "queries_forwarded",
-    "inbound_bytes",
-    "outbound_bytes",
+    "tot_forwarded_queries",
+    "tot_forwarded_responses",
+    "dropped_queries",
+    "dropped_responses",
+    "load_recent_total",
+    "average_idle_percent",
+    "recent_idle_percent",
+    "http_qps",
 ]
+SECTION_START_RE = re.compile(r"^>{6}(.+?)>{6}$")
+SECTION_END_RE = re.compile(r"^<{6}(.+?)<{6}$")
 
 
 def coerce_value(raw: str):
@@ -43,7 +53,11 @@ def coerce_value(raw: str):
 
 def parse_stats(text: str):
     metrics = []
+    sections = []
     summary = {}
+    current_section = None
+    current_section_metrics = []
+
     for line in text.splitlines():
         line = line.strip()
         if not line:
@@ -58,18 +72,60 @@ def parse_stats(text: str):
                 parts = line.split(None, 1)
 
         if len(parts) < 2:
-            metrics.append({"name": line, "value": "", "raw": line})
             continue
 
         name = parts[0]
         value = " ".join(parts[1:])
+        start_match = SECTION_START_RE.fullmatch(name)
+        end_match = SECTION_END_RE.fullmatch(name)
+
+        if start_match and value == "start":
+            current_section = start_match.group(1)
+            current_section_metrics = []
+            continue
+
+        if end_match and value == "end":
+            section_name = end_match.group(1)
+            if current_section == section_name:
+                sections.append(
+                    {
+                        "name": section_name,
+                        "title": format_section_title(section_name),
+                        "metrics": current_section_metrics,
+                    }
+                )
+            current_section = None
+            current_section_metrics = []
+            continue
+
         parsed_value = coerce_value(value)
         metric = {"name": name, "value": parsed_value, "display": value, "raw": line}
         metrics.append(metric)
-        if name in COMMON_KEYS or name not in summary:
+        if current_section is not None:
+            current_section_metrics.append(metric)
+        if name in COMMON_KEYS:
             summary[name] = parsed_value
 
-    return metrics, summary
+    unsectioned_metrics = [
+        metric
+        for metric in metrics
+        if not any(metric in section["metrics"] for section in sections)
+    ]
+    if unsectioned_metrics:
+        sections.insert(
+            0,
+            {
+                "name": "overview",
+                "title": "Overview",
+                "metrics": unsectioned_metrics,
+            },
+        )
+
+    return sections, summary, metrics
+
+
+def format_section_title(name: str):
+    return name.replace("_", " ").title()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -119,15 +175,15 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(body, HTTPStatus.BAD_GATEWAY)
             return
 
-        metrics, summary = parse_stats(raw)
+        sections, summary, metrics = parse_stats(raw)
         body = {
             "ok": True,
             "upstream": STATS_URL,
             "fetched_at": int(time.time()),
             "response_ms": int((time.time() - started_at) * 1000),
             "summary": summary,
+            "sections": sections,
             "metrics": metrics,
-            "raw": raw,
         }
         self._send_json(body, HTTPStatus.OK)
 

@@ -10,13 +10,13 @@
     <main class="shell">
       <header class="hero">
         <div class="hero-copy">
-          <p class="eyebrow">MTProxy Telemetry</p>
-          <h1>Runtime Stats Console</h1>
-          <p class="lede">Structured live metrics from the local MTProxy `http-stats` endpoint with a strict operator-focused layout.</p>
+          <p class="eyebrow">MTProxy / Stats</p>
+          <h1>Operator Console</h1>
+          <p class="lede">Structured counters, worker state and runtime internals from the local MTProxy stats endpoint.</p>
         </div>
         <div class="status-panel">
-          <div class="status-line">
-            <span class="dot" id="status-dot"></span>
+          <div class="status-line" id="status-line">
+            <span class="status-label">Status</span>
             <span id="status-text">Connecting</span>
           </div>
           <p id="status-meta">Waiting for first sample</p>
@@ -29,21 +29,11 @@
         <div class="panel-head">
           <div>
             <h2>Metrics</h2>
-            <p class="panel-copy">Normalized counters and values exposed by the local MTProxy stats endpoint.</p>
+            <p class="panel-copy">Grouped runtime counters exposed by MTProxy.</p>
           </div>
           <span class="caption" id="metric-count">0 rows</span>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Metric</th>
-                <th>Value</th>
-              </tr>
-            </thead>
-            <tbody id="metrics-body"></tbody>
-          </table>
-        </div>
+        <div id="sections-root" class="sections-root"></div>
       </article>
     </main>
     <script src="/app.js"></script>
