@@ -176,6 +176,117 @@ h2 {
   gap: 14px;
 }
 
+.links-root {
+  display: grid;
+  gap: 12px;
+}
+
+.link-block {
+  border-top: 1px solid var(--panel-border-strong);
+  padding-top: 14px;
+}
+
+.link-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.link-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.link-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.link-meta {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.link-kind {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.link-value {
+  display: block;
+  margin: 0;
+  color: var(--accent);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.link-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: end;
+}
+
+.action-button {
+  appearance: none;
+  border: 1px solid var(--panel-border-strong);
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.action-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.action-button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.check-state {
+  color: var(--muted);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.check-pending {
+  color: var(--accent);
+}
+
+.check-ok {
+  color: var(--accent-2);
+}
+
+.check-error {
+  color: var(--danger);
+}
+
+.link-empty {
+  padding: 14px 0 2px;
+  color: var(--muted);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+}
+
 .section-block {
   border-top: 1px solid var(--panel-border-strong);
   padding-top: 14px;
@@ -263,9 +374,18 @@ td:last-child {
   }
 
   .panel-head,
-  .section-head {
+  .section-head,
+  .link-head {
     align-items: start;
     flex-direction: column;
+  }
+
+  .link-row {
+    grid-template-columns: 1fr;
+  }
+
+  .link-actions {
+    justify-content: start;
   }
 }
 

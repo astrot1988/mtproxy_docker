@@ -65,6 +65,10 @@ The stats web UI will be available at:
 http://127.0.0.1:8080/
 ```
 
+The UI also exposes a `Check` action for every generated proxy link. It runs a
+TDLib-based connectivity probe inside the same container and returns the proxy
+ping result directly in the interface.
+
 ## Run With Compose
 
 Create a `.env` file or export variables in your shell, then start:
@@ -87,6 +91,7 @@ The repository includes [docker-compose.yml](/Users/aleksejlutovinov/Projects/qu
 - `MTPROXY_WORKERS`: number of worker processes, default `1`
 - `MTPROXY_HTTP_STATS`: enable `--http-stats`, default `true`
 - `MTPROXY_REFRESH_INTERVAL`: refresh interval in seconds, default `86400`
+- `MTPROXY_CHECK_TIMEOUT`: TDLib proxy check timeout in seconds, default `8`
 
 ## Notes
 

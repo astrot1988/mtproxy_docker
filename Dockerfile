@@ -32,7 +32,9 @@ RUN apt-get update \
         libssl3 \
         openssl \
         python3 \
+        python3-pip \
         zlib1g \
+    && python3 -m pip install --break-system-packages --no-cache-dir tdjson \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/mtproxy
@@ -40,9 +42,10 @@ WORKDIR /opt/mtproxy
 COPY --from=builder /src/mtproxy/objs/bin/mtproto-proxy /usr/local/bin/mtproto-proxy
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY stats-ui-server.py /usr/local/bin/stats-ui-server.py
+COPY tdlib-proxy-check.py /usr/local/bin/tdlib-proxy-check.py
 COPY stats-ui /opt/mtproxy/stats-ui
 
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/stats-ui-server.py
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/stats-ui-server.py /usr/local/bin/tdlib-proxy-check.py
 
 VOLUME ["/data"]
 
