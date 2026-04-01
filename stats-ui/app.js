@@ -10,7 +10,6 @@ const summaryPriority = [
   "outbound_bytes",
 ];
 
-const statusDot = document.getElementById("status-dot");
 const statusText = document.getElementById("status-text");
 const statusMeta = document.getElementById("status-meta");
 const summaryCards = document.getElementById("summary-cards");
